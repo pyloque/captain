@@ -119,3 +119,5 @@ Notice
 Captain is still in development, and it's stability has not been proved yet.
 But captain's design is very simple and clear, if you do not want to try captain with bugs,
 just make one yourself.
+
+<img src="screenshot/weixin.png" width="320" title="QR"/ >
