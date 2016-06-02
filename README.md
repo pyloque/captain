@@ -4,6 +4,7 @@ Captain is yet another service discovery implementation based on redis.
 Captain sacrifices a little high availability for simplicity and performance.
 In most cases, we don't have tens of thousands of machines, the possibility of machine crashing is very low, high availability is not so abviously important.
 But the market only provides zookeeper/etcd/consul, they are complex, at least much complexer compared with captain.
+[中文文档](README_zh.md)
 
 Architecture
 -------------
