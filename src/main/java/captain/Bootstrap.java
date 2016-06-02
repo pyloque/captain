@@ -186,6 +186,24 @@ public class Bootstrap {
 			return result;
 		}, jsonify);
 
+		Spark.post("/api/kv/set", jsonType, (req, res) -> {
+			String key = req.queryParams("key");
+			String value = req.queryParams("value");
+			Map<String, Object> result = new HashMap<String, Object>();
+			try {
+				JSONObject js = new JSONObject(value);
+				KvItem item = new KvItem();
+				item.setKey(key).setValue(js);
+				this.kv.set(item);
+				result.put("ok", true);
+			} catch (JSONException e) {
+				LOG.error("add key value error", e);
+				result.put("ok", false);
+				result.put("reason", "illegal json value");
+			}
+			return result;
+		}, jsonify);
+
 		Spark.get("/api/kv/get", jsonType, (req, res) -> {
 			Map<String, Object> result = new HashMap<String, Object>();
 			String key = req.queryParams("key");
@@ -282,7 +300,7 @@ public class Bootstrap {
 			context.put("config", config);
 			return Spark.modelAndView(context, "ui_kv.ftl");
 		}, engine);
-		
+
 		Spark.get("/ui/kv/del", (req, res) -> {
 			String key = req.queryParams("key");
 			this.kv.delete(key);
