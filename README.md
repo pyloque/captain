@@ -56,7 +56,7 @@ install maven
 
 git clone github.com/pyloque/captain.git
 cd captain
-mvn package
+mvn -DskipTests package
 java -jar target/captain.jar
 java -jar target/captain.jar ${configfile}  # custom config file
 
