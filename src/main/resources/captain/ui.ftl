@@ -30,7 +30,7 @@
 		All KeyValues[version=${kversion}]
 		<#if config.readonly()>
 		<#else>
-		<a href="/ui/kv/add" class="btn btn-link">Add</a>
+		<a href="/ui/kv/edit/" class="btn btn-link">Add</a>
 		</#if>
 	</div>
 	<div class="panel-body">
