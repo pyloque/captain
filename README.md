@@ -107,6 +107,7 @@ Client SDK
 2. Java Client https://github.com/pyloque/captain-java
 3. Golang Client https://github.com/pyloque/gocaptain
 4. Agent Server https://github.com/pyloque/captain-agent
+5. PHP Client https://github.com/pyloque/phpcaptain
 
 Reference
 -------------------------
