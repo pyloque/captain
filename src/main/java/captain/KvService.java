@@ -17,7 +17,7 @@ public class KvService {
 	}
 
 	public void set(KvItem item) {
-		redis.transaction(pipe -> {
+		redis.pipeline(pipe -> {
 			pipe.set(keyForItem(item.getKey()), item.getValue().toString());
 			pipe.sadd(globalAllKeys, item.getKey());
 			pipe.incr(keyForVersion(item.getKey()));
@@ -28,7 +28,7 @@ public class KvService {
 	public KvItem get(String key) {
 		Holder<Response<String>> js = new Holder<Response<String>>();
 		Holder<Response<Long>> version = new Holder<Response<Long>>();
-		redis.transaction(pipe -> {
+		redis.pipeline(pipe -> {
 			js.set(pipe.get(keyForItem(key)));
 			version.set(pipe.incrBy(keyForVersion(key), 0));
 		});
@@ -44,7 +44,7 @@ public class KvService {
 	}
 
 	public void delete(String key) {
-		redis.transaction(pipe -> {
+		redis.pipeline(pipe -> {
 			pipe.del(keyForItem(key));
 			pipe.del(keyForVersion(key));
 			pipe.srem(globalAllKeys, key);
@@ -81,7 +81,7 @@ public class KvService {
 
 	public Map<String, Long> versions(String[] keys) {
 		Map<String, Response<Long>> holders = new HashMap<String, Response<Long>>();
-		redis.transaction(pipe -> {
+		redis.pipeline(pipe -> {
 			for (String key : keys) {
 				holders.put(key, pipe.incrBy(keyForVersion(key), 0));
 			}
@@ -96,7 +96,7 @@ public class KvService {
 	public Map<String, KvItem> multiGet(String[] keys) {
 		Map<String, Response<Long>> versions = new HashMap<String, Response<Long>>();
 		Map<String, Response<String>> values = new HashMap<String, Response<String>>();
-		redis.transaction(pipe -> {
+		redis.pipeline(pipe -> {
 			for (String key : keys) {
 				values.put(key, pipe.get(keyForItem(key)));
 				versions.put(key, pipe.incrBy(keyForVersion(key), 0));

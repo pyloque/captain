@@ -5,6 +5,7 @@ public class ServiceItem implements Comparable<ServiceItem> {
 	private String name;
 	private String host;
 	private int port;
+	private String payload;
 	private int ttl;
 
 	public ServiceItem(String name, String host, int port) {
@@ -12,10 +13,24 @@ public class ServiceItem implements Comparable<ServiceItem> {
 	}
 
 	public ServiceItem(String name, String host, int port, int ttl) {
+		this(name, host, port, ttl, "");
+	}
+	
+	public ServiceItem(String name, String host, int port, int ttl, String payload) {
 		this.name = name;
 		this.host = host;
 		this.port = port;
 		this.ttl = ttl;
+		this.payload = payload;
+	}
+	
+	public ServiceItem setPayload(String payload) {
+		this.payload = payload;
+		return this;
+	}
+	
+	public String getPayload() {
+		return this.payload;
 	}
 
 	public String getKey() {

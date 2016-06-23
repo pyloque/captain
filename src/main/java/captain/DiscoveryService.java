@@ -38,6 +38,15 @@ public class DiscoveryService {
 		return "service_set_" + name;
 	}
 
+	/**
+	 * Service additional payload key
+	 * @param name
+	 * @return
+	 */
+	private static String keyForPayload(String name) {
+		return "service_payload_" + name;
+	}
+
 	/* All Service names */
 	private final static String nameKeys = "service_g_names";
 	/* Global Service Version */
@@ -56,10 +65,11 @@ public class DiscoveryService {
 		Holder<Long> count = new Holder<Long>();
 		this.redis.execute(jedis -> {
 			jedis.sadd(nameKeys, item.getName());
+			jedis.hset(keyForPayload(item.getName()), item.getKey(), item.getPayload());
 			count.set(jedis.zadd(keyForSet(item.getName()), now + item.getTtl(), item.getKey()));
 		});
 		if (count.value() > 0) {
-			this.redis.transaction(pipe -> {
+			this.redis.pipeline(pipe -> {
 				pipe.incr(keyForVersion(item.getName()));
 				pipe.incr(globalVersionKey);
 			});
@@ -76,8 +86,9 @@ public class DiscoveryService {
 		if (score.value() == null) {
 			return;
 		}
-		this.redis.transaction(pipe -> {
+		this.redis.pipeline(pipe -> {
 			pipe.zrem(keyForSet(item.getName()), item.getKey());
+			pipe.hdel(keyForPayload(item.getName()), item.getKey());
 			pipe.incr(keyForVersion(item.getName()));
 			pipe.incr(globalVersionKey);
 		});
@@ -123,7 +134,7 @@ public class DiscoveryService {
 
 	public Map<String, Integer> multiLens(String[] names) {
 		Map<String, Response<Long>> holder = new HashMap<String, Response<Long>>();
-		this.redis.transaction(pipe -> {
+		this.redis.pipeline(pipe -> {
 			for (String name : names) {
 				holder.put(name, pipe.zcard(keyForSet(name)));
 			}
@@ -138,15 +149,22 @@ public class DiscoveryService {
 	public ServiceSet serviceSet(String name) {
 		Holder<Response<Long>> version = new Holder<Response<Long>>();
 		Holder<Response<Set<Tuple>>> services = new Holder<Response<Set<Tuple>>>();
-		this.redis.transaction(pipe -> {
+		Holder<Response<Map<String, String>>> payloadsHolder = new Holder<Response<Map<String, String>>>();
+		this.redis.pipeline(pipe -> {
 			version.set(pipe.incrBy(keyForVersion(name), 0));
 			services.set(pipe.zrangeWithScores(keyForSet(name), 0, -1));
+			payloadsHolder.set(pipe.hgetAll(keyForPayload(name)));
 		});
 		Set<ServiceItem> items = new HashSet<ServiceItem>();
 		long now = System.currentTimeMillis() / 1000;
+		Map<String, String> payloads = payloadsHolder.value().get();
 		for (Tuple tuple : services.value().get()) {
 			String[] pair = tuple.getElement().split(":");
-			items.add(new ServiceItem(name, pair[0], Integer.parseInt(pair[1]), (int) (tuple.getScore() - now)));
+			String host = pair[0];
+			int port = Integer.parseInt(pair[1]);
+			int ttl = (int) (tuple.getScore() - now);
+			String payload = payloads.get(tuple.getElement());
+			items.add(new ServiceItem(name, host, port, ttl, payload));
 		}
 		ServiceSet set = new ServiceSet(name, items, version.value().get());
 		if (set.isEmpty()) {
@@ -156,10 +174,10 @@ public class DiscoveryService {
 		}
 		return set;
 	}
-	
+
 	public void trimAllExpired() {
 		Set<String> names = this.allNames();
-		for(String name: names) {
+		for (String name : names) {
 			this.trimExpired(name);
 		}
 	}
@@ -171,9 +189,18 @@ public class DiscoveryService {
 			count.set(jedis.zremrangeByScore(keyForSet(name), 0, now));
 		});
 		if (count.value() > 0) {
-			this.redis.transaction(pipe -> {
+			this.redis.pipeline(pipe -> {
 				pipe.incr(keyForVersion(name));
 				pipe.incr(globalVersionKey);
+			});
+			this.redis.execute(jedis -> {
+				// trim expired payload
+				Set<String> keys = jedis.zrange(keyForSet(name), 0, -1);
+				Set<String> pkeys = jedis.hkeys(keyForPayload(name));
+				pkeys.removeAll(keys);
+				for (String key : pkeys) {
+					jedis.hdel(keyForPayload(name), key);
+				}
 			});
 		}
 	}

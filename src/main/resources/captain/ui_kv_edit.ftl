@@ -21,9 +21,9 @@
             <label for="value" class="col-sm-2 control-label">Value</label>
             <div class="col-sm-10">
             	<#if kv?exists>
-                <input type="text" name="value" value="${kv.value?web_safe}" class="form-control" required placeholder="json value">
+                <textarea name="value" class="form-control" rows="10" required placeholder="json value">${kv.value?web_safe}</textarea>
                 <#else>
-                 <input type="text" name="value" value="" class="form-control" required placeholder="json value">
+                 <textarea name="value" class="form-control" rows="10" required placeholder="json value"></textarea>
                 </#if>
             </div>
           </div>
@@ -58,7 +58,7 @@ function validateJson(el) {
 }
 $(function() {
 	$("#add_form").submit(function() {
-		return validateJson($("input[name=value]"));
+		return validateJson($("textarea[name=value]"));
 	});
 });
 </script>

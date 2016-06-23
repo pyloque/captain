@@ -7,7 +7,7 @@
 	<div class="panel-body">
 		<ul class="list-group">
 			<#list services as service>
-			<li class="list-group-item">${service.key} <span class="badge">${service.ttl}</span></li>
+			<li class="list-group-item">${service.key} <label class="label label-success">${service.payload}</label><span class="badge">${service.ttl}</span></li>
 			</#list>
 		</ul>
 	</div>

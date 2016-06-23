@@ -134,6 +134,7 @@ public class Bootstrap {
 			String host = req.queryParams("host");
 			String port = req.queryParams("port");
 			String ttl = req.queryParams("ttl");
+			String payload = req.queryParams("payload");
 			Map<String, Object> result = new HashMap<String, Object>();
 			result.put("ok", false);
 			if (Helpers.isEmpty(name) || Helpers.isEmpty(host) || Helpers.isEmpty(port) || !Helpers.isInteger(port)
@@ -141,7 +142,11 @@ public class Bootstrap {
 				res.status(400);
 				result.put("reason", "params illegal");
 			} else {
-				this.discovery.keep(new ServiceItem(name, host, Integer.parseInt(port), Integer.parseInt(ttl)));
+				if (payload == null) {
+					payload = "";
+				}
+				this.discovery
+						.keep(new ServiceItem(name, host, Integer.parseInt(port), Integer.parseInt(ttl), payload));
 				result.put("ok", true);
 			}
 			return result;
@@ -306,7 +311,7 @@ public class Bootstrap {
 			this.kv.delete(key);
 			res.redirect("/ui/");
 			return null;
-		}, engine);
+		});
 
 		Spark.get("/ui/kv/edit", (req, res) -> {
 			Map<String, Object> context = new HashMap<String, Object>();
