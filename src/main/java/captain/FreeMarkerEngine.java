@@ -13,7 +13,7 @@ public class FreeMarkerEngine extends TemplateEngine {
 
 	private Configuration configuration;
 
-	protected FreeMarkerEngine() {
+	public FreeMarkerEngine() {
 		this.configuration = createFreemarkerConfiguration();
 	}
 
@@ -30,7 +30,7 @@ public class FreeMarkerEngine extends TemplateEngine {
 			throw new IllegalArgumentException(e);
 		}
 	}
-
+	
 	private Configuration createFreemarkerConfiguration() {
 		Configuration config = new Configuration(Configuration.VERSION_2_3_23);
 		config.setClassForTemplateLoading(this.getClass(), "");

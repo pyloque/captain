@@ -117,7 +117,7 @@ Reference
 
 Notice
 -------------------------
-Captain is still in development, and it's stability has not been proved yet.
+Lack of long running experience, Captain's stability has not been proved yet.
 But captain's design is very simple and clear, if you do not want to try captain with bugs,
 just make one yourself.
 

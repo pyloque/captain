@@ -101,6 +101,17 @@ public class Bootstrap {
 		}
 		this.initReadonlyHandlers();
 		this.initViewHandlers();
+		this.initExceptionHandlers();
+
+		Spark.awaitInitialization();
+		LOG.warn("captain server started");
+	}
+
+	public void initExceptionHandlers() {
+		Spark.exception(Exception.class, (exc, req, res) -> {
+			LOG.error(String.format("error occured on path=%s", req.pathInfo()), exc);
+			res.status(500);
+		});
 	}
 
 	public void initWritableHandlers() {
