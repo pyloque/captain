@@ -16,7 +16,7 @@
 </div>
 <#else>
 <div class="panel panel-success">
-	<div class="panel-heading">All Services[version=${sversion}]</div>
+	<div class="panel-heading">All Services[version=${sversion?c}]</div>
 	<div class="panel-body">
 		<ul class="list-group">
 			<#list services?keys as name>
@@ -27,7 +27,7 @@
 </div>
 <div class="panel panel-success">
 	<div class="panel-heading">
-		All KeyValues[version=${kversion}]
+		All KeyValues[version=${kversion?c}]
 		<#if config.readonly()>
 		<#else>
 		<a href="/ui/kv/edit" class="btn btn-link">Add</a>

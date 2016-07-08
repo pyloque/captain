@@ -8,7 +8,7 @@
 <#include "config_show.ftl">
 <div class="panel panel-success">
 	<div class="panel-heading">
-		Key<a href="/ui/"> ${kv.key}</a> [version=${kv.version}]
+		Key<a href="/ui/"> ${kv.key}</a> [version=${kv.version?c}]
 		<#if config.readonly()>
 		<#else>
 		<a class="btn btn-link" href="/ui/kv/edit?key=${kv.key}">Edit</a>
