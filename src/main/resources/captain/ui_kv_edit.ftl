@@ -21,7 +21,7 @@
             <label for="value" class="col-sm-2 control-label">Value</label>
             <div class="col-sm-10">
             	<#if kv?exists>
-                <textarea name="value" class="form-control" rows="10" required placeholder="json value">${kv.value?web_safe}</textarea>
+                <textarea name="value" class="form-control" rows="10" required placeholder="json value">${kv.beatifiedValue?web_safe}</textarea>
                 <#else>
                  <textarea name="value" class="form-control" rows="10" required placeholder="json value"></textarea>
                 </#if>

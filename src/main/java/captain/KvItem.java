@@ -36,6 +36,10 @@ public class KvItem implements Comparable<KvItem>{
 		this.version = version;
 		return this;
 	}
+	
+	public String getBeatifiedValue() {
+		return this.value.toString(4);
+	}
 
 	@Override
 	public int compareTo(KvItem o) {
