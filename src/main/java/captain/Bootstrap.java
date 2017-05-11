@@ -287,7 +287,7 @@ public class Bootstrap {
 				result.put("value", seq);
 			}
 			return result;
-		});
+		}, jsonify);
 
 		Spark.get("/api/seq/release", jsonType, (req, res) -> {
 			String name = req.queryParams("name");
@@ -302,7 +302,7 @@ public class Bootstrap {
 				result.put("ok", true);
 			}
 			return result;
-		});
+		}, jsonify);
 
 	}
 
