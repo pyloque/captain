@@ -41,6 +41,16 @@
 		</ul>
 	</div>
 </div>
+<div class="panel panel-success">
+	<div class="panel-heading">All Reusable Sequences</div>
+	<div class="panel-body">
+		<ul class="list-group">
+			<#list seqs?keys as name>
+			<li class="list-group-item"><span class="badge">${seqs[name]?c}</span><a href="/ui/seq/?name=${name}">${name}</a></li>
+			</#list>
+		</ul>
+	</div>
+</div>
 </#if>
 </#macro>
 

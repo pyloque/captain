@@ -2,6 +2,7 @@ package captain;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -29,6 +30,7 @@ public class Bootstrap {
 
 	private RedisStore redis;
 	private DiscoveryService discovery;
+	private ReusableSequenceService reusableSeq;
 	private KvService kv;
 	private ExpiringWatcher watcher;
 	private final static GsonTransformer jsonify = new GsonTransformer();
@@ -54,6 +56,7 @@ public class Bootstrap {
 		this.redis = new RedisStore(config.redisUri());
 		this.discovery = new DiscoveryService(this.redis);
 		this.kv = new KvService(this.redis);
+		this.reusableSeq = new ReusableSequenceService(this.redis);
 		this.watcher = new ExpiringWatcher(this.discovery);
 		this.watcher.interval(config.interval()).setDaemon(true);
 	}
@@ -150,7 +153,7 @@ public class Bootstrap {
 			result.put("ok", false);
 			if (Helpers.isEmpty(name) || Helpers.isEmpty(host) || Helpers.isEmpty(port) || !Helpers.isInteger(port)
 					|| !Helpers.isInteger(ttl)) {
-				res.status(400);
+				result.put("ok", false);
 				result.put("reason", "params illegal");
 			} else {
 				if (payload == null) {
@@ -169,7 +172,7 @@ public class Bootstrap {
 			String port = req.queryParams("port");
 			Map<String, Object> result = new HashMap<String, Object>();
 			if (Helpers.isEmpty(name) || Helpers.isEmpty(host) || Helpers.isEmpty(port) || !Helpers.isInteger(port)) {
-				res.status(400);
+				result.put("ok", false);
 				result.put("reason", "params illegal");
 			} else {
 				this.discovery.cancel(new ServiceItem(name, host, Integer.parseInt(port)));
@@ -261,7 +264,7 @@ public class Bootstrap {
 			String name = req.queryParams("name");
 			Map<String, Object> result = new HashMap<String, Object>();
 			if (Helpers.isEmpty(name)) {
-				res.status(400);
+				result.put("ok", false);
 				result.put("reason", "params illegal");
 			} else {
 				ServiceSet set = this.discovery.serviceSet(name);
@@ -271,6 +274,35 @@ public class Bootstrap {
 			}
 			return result;
 		}, jsonify);
+
+		Spark.get("/api/seq/next", jsonType, (req, res) -> {
+			String name = req.queryParams("name");
+			Map<String, Object> result = new HashMap<String, Object>();
+			if (Helpers.isEmpty(name)) {
+				result.put("ok", false);
+				result.put("reason", "params illegal");
+			} else {
+				int seq = reusableSeq.nextId(name);
+				result.put("ok", true);
+				result.put("value", seq);
+			}
+			return result;
+		});
+
+		Spark.get("/api/seq/release", jsonType, (req, res) -> {
+			String name = req.queryParams("name");
+			String id = req.queryParams("id");
+			Map<String, Object> result = new HashMap<String, Object>();
+			if (Helpers.isEmpty(name) || Helpers.isEmpty(id) || !Helpers.isInteger(id)) {
+				result.put("ok", false);
+				result.put("reason", "params illegal");
+			} else {
+				int seq = Integer.parseInt(id);
+				reusableSeq.releaseId(name, seq);
+				result.put("ok", true);
+			}
+			return result;
+		});
 
 	}
 
@@ -289,6 +321,8 @@ public class Bootstrap {
 				Set<String> keyset = this.kv.allKeys();
 				long kversion = this.kv.globalVersion();
 				context.put("kvs", new TreeSet<String>(keyset));
+				Map<String, Integer> seqSet = this.reusableSeq.allSeqs();
+				context.put("seqs", seqSet);
 				context.put("kversion", kversion);
 			} catch (JedisConnectionException e) {
 				context.put("reason", e.toString());
@@ -346,6 +380,31 @@ public class Bootstrap {
 				LOG.error("add key value error", e);
 			}
 			res.redirect("/ui/kv/?key=" + key);
+			return null;
+		});
+
+		Spark.get("/ui/seq/", (req, res) -> {
+			Map<String, Object> context = new HashMap<String, Object>();
+			String name = req.queryParams("name");
+			List<Boolean> ids = reusableSeq.listIds(name);
+			ReusableSequence seq = new ReusableSequence(name, reusableSeq.getSlots(name), ids);
+			context.put("seq", seq);
+			context.put("config", config);
+			return Spark.modelAndView(context, "ui_seq.ftl");
+		}, engine);
+
+		Spark.get("/ui/seq/del", (req, res) -> {
+			String name = req.queryParams("name");
+			this.reusableSeq.deleteSeq(name);
+			res.redirect("/ui/");
+			return null;
+		});
+
+		Spark.get("/ui/seq/release", (req, res) -> {
+			String name = req.queryParams("name");
+			String id = req.queryParams("id");
+			this.reusableSeq.releaseId(name, Integer.parseInt(id));
+			res.redirect("/ui/seq/?name=" + name);
 			return null;
 		});
 
